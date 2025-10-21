@@ -20,6 +20,7 @@ public class Administrador extends Usuario{
 		mapa_venues.put(restricciones_de_uso, venue_creado);
 		
 		evento_encontrado.getVenues().add(venue_creado);
+		this.mapa_eventos = null;
 	}
 	
 	
