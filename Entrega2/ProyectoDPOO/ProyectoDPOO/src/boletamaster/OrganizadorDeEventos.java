@@ -1,24 +1,26 @@
 package boletamaster;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class OrganizadorDeEventos extends Usuario{
 	
-	private ArrayList<Evento> eventos; 
+	public  HashMap<String, Evento> mapa_eventos;
 	private ArrayList<Tiquete> tiquetes;
+	public Administrador admin;
 	
 	public OrganizadorDeEventos(String login, String password) {
 		super(login,password);
-		this.eventos= new ArrayList<Evento>();
+		this.mapa_eventos = new HashMap<String, Evento>();
 		this.tiquetes = new ArrayList<Tiquete>();
 	}
 
-	public ArrayList<Evento> getEventos() {
-		return eventos;
+	public HashMap<String, Evento> getEventos() {
+		return mapa_eventos;
 	}
 
-	public void setEventos(ArrayList<Evento> eventos) {
-		this.eventos = eventos;
+	public void setEventos(HashMap<String, Evento> eventos) {
+		this.mapa_eventos = eventos;
 	}
 
 	public ArrayList<Tiquete> getTiquetes() {
@@ -27,6 +29,10 @@ public class OrganizadorDeEventos extends Usuario{
 
 	public void setTiquetes(ArrayList<Tiquete> tiquetes) {
 		this.tiquetes = tiquetes;
+	}
+	public void sugerir_cancelar_evento(String nombre_evento, String solicitud) {
+		//agregar la peticion a su administrador
+		admin.getMapa_solicitudes().put(nombre_evento, solicitud);
 	}
 	
 }

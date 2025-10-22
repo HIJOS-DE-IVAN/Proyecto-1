@@ -9,6 +9,7 @@ public class Evento {
 	private Date fecha;
 	private String tipoEvento;
 	private String estadoEvento;
+	public double sobrecargo; //le agregamos el sobrecargo, el cual editara el administrador
 	
 	private OrganizadorDeEventos organizador;
 	private ArrayList<Venue> venues;
@@ -29,6 +30,9 @@ public class Evento {
 	}
 	public Date getFecha() {
 		return fecha;
+	}
+	public double getSobrecargo() {
+		return sobrecargo;
 	}
 	public void setFecha(Date fecha) {
 		this.fecha = fecha;
@@ -52,6 +56,10 @@ public class Evento {
 
 	public void setOrganizador(OrganizadorDeEventos organizador) {
 		this.organizador = organizador;
+	}
+	
+	public void setSobrecargo(double sobrecargo) {
+		this.sobrecargo=  sobrecargo;
 	}
 
 	public ArrayList<Venue> getVenues() {
