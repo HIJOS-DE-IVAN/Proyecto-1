@@ -11,6 +11,7 @@ public class Administrador extends Usuario{
 	public  HashMap<String, Evento> mapa_eventos;
 	public  HashMap<String, Venue> mapa_venues;
 	public HashMap<String, String> mapa_solicitudes; //el primer string hace referencia al nombre del evento a cancelar, el segundo hace referencia a la descripción de la solicitud
+	public HashMap<String, Venue> mapa_venues_sugeridos; //nombre, venue
 	
 	public Administrador(String login, String password) {
 		super(login,password);
@@ -46,11 +47,16 @@ public class Administrador extends Usuario{
 		//Agregamos el venue al mapa de venues, el id es el nombre del venue
 		mapa_venues.put(nombre_venue, venue_creado);
 	}
-	public void aprobarVenue(Venue venue_a_aprobar) {
-		//aprobarlo es simplemente que lo agregue al mapa de venues
-		String nombre_venue = venue_a_aprobar.getNombre();
-		mapa_venues.put(nombre_venue, venue_a_aprobar);
+	public void aprobarVenue(String nombre_venue) {
+		Venue venue = mapa_venues_sugeridos.get(nombre_venue);
+		venue.setAprobado(true);
+		//aprobarlo es simplemente que lo agregue al mapa de venues y volverlo aprobado
+		mapa_venues.put(nombre_venue, venue);
 	}
+	public HashMap<String, Venue> getMapa_venues_sugeridos() {
+		return mapa_venues_sugeridos;
+	}
+
 	public void fijar_sobrecargo_evento(Evento evento, double sobrecargo) {
 		evento.setSobrecargo(sobrecargo);
 	}
@@ -79,6 +85,9 @@ public class Administrador extends Usuario{
 	}
 	
 	public void aprobar_reembolso(String evento_nombre, String nombre_cliente) {
+		
+		//Paso -1: Podría funcionar, que dentro de la información de la salud ya vaya el nombre del evento y el nombre del cliente
+		//Para así no tener que pedirlo por a
 		
 		//Paso 0: Contar cuánto le debemos retornar al cliente
 		double saldo_retorno = 0;
