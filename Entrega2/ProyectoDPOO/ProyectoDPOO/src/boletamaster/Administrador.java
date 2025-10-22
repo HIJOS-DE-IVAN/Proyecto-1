@@ -93,7 +93,7 @@ public class Administrador extends Usuario{
 		double saldo_retorno = 0;
 		//Paso 1: Obtener al cliente y su saldo en la plataforma
 		Cliente cliente_encontrado = mapa_clientes.get(nombre_cliente);
-		double saldo_plataforma = cliente_encontrado.getSaldoPlataforma();
+		double saldo_plataforma = cliente_encontrado.consultar_saldo_disponible();
 		
 		//Paso 2: Obtener tiquetes del cliente
 		List<Tiquete> tiquetes_cliente = cliente_encontrado.getTiquetes();
