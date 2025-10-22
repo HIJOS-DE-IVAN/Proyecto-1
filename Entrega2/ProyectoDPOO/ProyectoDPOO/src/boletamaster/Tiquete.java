@@ -124,6 +124,6 @@ public class Tiquete {
 		this.localidad = localidad;
 	}
 
-    
+    //intentare crear una funcion que relacion las herencias de tiquete y hare expcetions
     
 }
