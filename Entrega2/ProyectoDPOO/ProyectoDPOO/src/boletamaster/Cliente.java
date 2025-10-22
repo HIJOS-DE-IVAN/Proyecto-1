@@ -400,7 +400,7 @@ public class Cliente extends Usuario{
 					a++;
 				}
 			}
-			// Si un evento no tiene disponibilidad, se omite.
+			// Si un evento no tiene disponibilidad, se omite
 		}
 
 		//Paso 3: Verificar saldo
