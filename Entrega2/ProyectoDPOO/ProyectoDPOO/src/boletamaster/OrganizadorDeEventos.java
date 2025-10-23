@@ -3,6 +3,8 @@ package boletamaster;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 
 public class OrganizadorDeEventos extends Usuario{
 	
@@ -14,6 +16,7 @@ public class OrganizadorDeEventos extends Usuario{
 	public OrganizadorDeEventos(String login, String password) {
 		super(login,password);
 		this.mapa_eventos = new HashMap<String, Evento>();
+		this.mapa_venues = new HashMap<String, Venue>();
 		this.tiquetes = new ArrayList<Tiquete>();
 	}
 
@@ -275,211 +278,98 @@ public class OrganizadorDeEventos extends Usuario{
 		this.tiquetes.add(tiquete_encontrado);
 	}
 
-	public void comprar_palco() {
-		//Paso 1: Parámetro por defecto
-		int cantidad_palco = 2;
-
-		//Paso 2: Buscar primer evento con localidad numerada con al menos 2 asientos libres
-		Evento evento_seleccionado = null;
-		Localidad localidad_numerada = null;
-		boolean encontrado = false;
-
-		if (this.mapa_eventos == null || this.mapa_eventos.isEmpty()) {
-			throw new IllegalStateException("No hay eventos disponibles para palco.");
+	public void comprar_palco(String nombre_evento, String nombre_localidad, int cantidad) {
+		// Por qué: el organizador debe indicar evento/localidad/cantidad. 
+		// ATENCIÓN(why): Organizador no es Cliente; el campo cliente del Tiquete se deja null.
+		validarCantidad(cantidad);
+		Evento evento = obtenerEventoPorNombre(nombre_evento);
+		Localidad localidad = obtenerLocalidadPorNombre(evento, nombre_localidad);
+		if (!localidad.isNumerada()) {
+			throw new IllegalStateException("La localidad seleccionada no es numerada; un palco requiere asientos numerados.");
 		}
+		if (this.tiquetes == null) this.tiquetes = new ArrayList<>();
+		if (localidad.getTiquetes() == null) localidad.setTiquetes(new ArrayList<>());
 
-		for (Evento evento : this.mapa_eventos.values()) {
-			if (evento == null || evento.getVenues() == null) continue;
-			ArrayList<Venue> listado_venues = evento.getVenues();
-			int contador_i = 0;
-			while(encontrado == false & listado_venues != null & contador_i<listado_venues.size()) {
-				Venue venue_leido = listado_venues.get(contador_i);
-				ArrayList<Localidad> localidades_venue = (venue_leido != null) ? venue_leido.getLocalidades() : null;
-				int contador_j = 0;
-				while(encontrado == false & localidades_venue != null & contador_j<localidades_venue.size()) {
-					Localidad localidad_leida = localidades_venue.get(contador_j);
-					if (localidad_leida != null && localidad_leida.isNumerada()) {
-						ArrayList<Tiquete> listado_tiquetes = localidad_leida.getTiquetes();
-						int libres = 0;
-						int k = 0;
-						while(listado_tiquetes != null & k < listado_tiquetes.size()) {
-							Tiquete base = listado_tiquetes.get(k);
-							if (base instanceof TiqueteVendidoNumerado) {
-								TiqueteVendidoNumerado tn = (TiqueteVendidoNumerado) base;
-								if (tn.isEstaVendido() == false) { libres++; }
-							}
-							k++;
-						}
-						if (libres >= cantidad_palco) {
-							evento_seleccionado = evento;
-							localidad_numerada = localidad_leida;
-							encontrado = true;
-						}
-					}
-					contador_j ++;
-				}
-				contador_i ++;
-			}
-			if (encontrado) break;
-		}
-
-		if (localidad_numerada == null) {
-			throw new IllegalStateException("No hay localidad numerada con disponibilidad suficiente para palco.");
-		}
-
-		//Paso 3: Seleccionar 2 asientos numerados
-		ArrayList<Tiquete> listado_tiquetes = localidad_numerada.getTiquetes();
-		ArrayList<TiqueteVendidoNumerado> seleccionados = new ArrayList<TiqueteVendidoNumerado>();
-		int contador_t = 0;
-		while(seleccionados.size() < cantidad_palco & listado_tiquetes != null & contador_t < listado_tiquetes.size()) {
-			Tiquete base = listado_tiquetes.get(contador_t);
-			if (base instanceof TiqueteVendidoNumerado) {
-				TiqueteVendidoNumerado tn = (TiqueteVendidoNumerado) base;
-				if (tn.isEstaVendido() == false) {
-					seleccionados.add(tn);
-				}
-			}
-			contador_t++;
-		}
-		if (seleccionados.size() < cantidad_palco) {
-			throw new IllegalStateException("No se pudo completar el palco.");
-		}
-
-		//Paso 4: Marcar vendidos y agregar al organizador (sin saldo)
-		if (this.tiquetes == null) { this.tiquetes = new ArrayList<Tiquete>(); }
-		int z = 0;
-		while(z < seleccionados.size()) {
-			TiqueteVendidoNumerado t = seleccionados.get(z);
-			t.setEstaVendido(true);
-			t.setCliente(null); // organizador no es Cliente
+		for (int i = 0; i < cantidad; i++) {
+			Tiquete t = new Tiquete(
+				0.0, 0.0, UUID.randomUUID().toString(),
+				new Date(), 0, localidad, localidad.getPrecioBase(),
+				true, true, null  // ATENCIÓN(why): asigna luego a un Cliente real si corresponde
+			);
 			this.tiquetes.add(t);
-			z++;
+			localidad.getTiquetes().add(t);
 		}
 	}
 
-	public void comprar_paquete_multiple_temporada() {
-		//Paso 1: Validar eventos
-		if (this.mapa_eventos == null || this.mapa_eventos.isEmpty()) {
-			throw new IllegalStateException("No hay eventos para paquete de temporada.");
+	public void comprar_paquete_multiple_temporada(java.util.List<String> nombres_eventos, String nombre_localidad, int cantidadPorEvento) {
+		// Por qué: se requiere control explícito.
+		validarCantidad(cantidadPorEvento);
+		if (nombres_eventos == null || nombres_eventos.isEmpty()) {
+			throw new IllegalArgumentException("Debe indicar al menos un evento.");
 		}
+		if (this.tiquetes == null) this.tiquetes = new ArrayList<>();
 
-		//Paso 2: Por cada evento, tomar 1 no numerado disponible (primera localidad no numerada)
-		if (this.tiquetes == null) { this.tiquetes = new ArrayList<Tiquete>(); }
+		for (String ne : nombres_eventos) {
+			Evento evento = obtenerEventoPorNombre(ne);
+			Localidad loc = obtenerLocalidadPorNombre(evento, nombre_localidad);
+			if (loc.getTiquetes() == null) loc.setTiquetes(new ArrayList<>());
 
-		for (Evento evento : this.mapa_eventos.values()) {
-			if (evento == null || evento.getVenues() == null) continue;
-
-			boolean adquirido = false;
-			ArrayList<Venue> listado_venues = evento.getVenues();
-			int i = 0;
-			while(adquirido == false & listado_venues != null & i < listado_venues.size()) {
-				Venue v = listado_venues.get(i);
-				ArrayList<Localidad> locs = (v != null) ? v.getLocalidades() : null;
-				int j = 0;
-				while(adquirido == false & locs != null & j < locs.size()) {
-					Localidad loc = locs.get(j);
-					if (loc != null && loc.isNumerada() == false) {
-						ArrayList<Tiquete> lista = loc.getTiquetes();
-						int k = 0;
-						while(adquirido == false & lista != null & k < lista.size()) {
-							Tiquete t = lista.get(k);
-							if (t != null && !(t instanceof TiqueteVendidoNumerado) && t.isEstaVendido() == false) {
-								//TODO: validar fecha si aplica
-								t.setEstaVendido(true);
-								t.setCliente(null);
-								this.tiquetes.add(t);
-								adquirido = true;
-								break;
-							}
-							k++;
-						}
-					}
-					j++;
-				}
-				i++;
+			for (int i = 0; i < cantidadPorEvento; i++) {
+				Tiquete t = new Tiquete(
+					0.0, 0.0, UUID.randomUUID().toString(),
+					new Date(), 0, loc, loc.getPrecioBase(),
+					true, true, null // ATENCIÓN(why): organizador no es Cliente
+				);
+				this.tiquetes.add(t);
+				loc.getTiquetes().add(t);
 			}
-			// Si no hay disponibilidad en un evento, se omite ese evento.
 		}
 	}
 
-	public void comprar_paquete_multiple_deluxe() {
-		//Paso 1: Validar eventos
-		if (this.mapa_eventos == null || this.mapa_eventos.isEmpty()) {
-			throw new IllegalStateException("No hay eventos para paquete deluxe.");
+	public void comprar_paquete_multiple_deluxe(java.util.List<String> nombres_eventos, String nombre_localidad, int cantidadPorEvento) {
+		// Por qué: igual que temporada; aquí podrías aplicar reglas/beneficios Deluxe.
+		validarCantidad(cantidadPorEvento);
+		if (nombres_eventos == null || nombres_eventos.isEmpty()) {
+			throw new IllegalArgumentException("Debe indicar al menos un evento.");
 		}
+		if (this.tiquetes == null) this.tiquetes = new ArrayList<>();
 
-		//Paso 2: Por cada evento, priorizar 1 numerado; si no hay, 1 no numerado
-		if (this.tiquetes == null) { this.tiquetes = new ArrayList<Tiquete>(); }
+		for (String ne : nombres_eventos) {
+			Evento evento = obtenerEventoPorNombre(ne);
+			Localidad loc = obtenerLocalidadPorNombre(evento, nombre_localidad);
+			if (loc.getTiquetes() == null) loc.setTiquetes(new ArrayList<>());
 
-		for (Evento evento : this.mapa_eventos.values()) {
-			if (evento == null || evento.getVenues() == null) continue;
-
-			boolean adquirido = false;
-
-			// 2.1 Intentar numerado
-			ArrayList<Venue> venues = evento.getVenues();
-			int i = 0;
-			while(adquirido == false & venues != null & i < venues.size()) {
-				Venue v = venues.get(i);
-				ArrayList<Localidad> locs = (v != null) ? v.getLocalidades() : null;
-				int j = 0;
-				while(adquirido == false & locs != null & j < locs.size()) {
-					Localidad loc = locs.get(j);
-					if (loc != null && loc.isNumerada()) {
-						ArrayList<Tiquete> lista = loc.getTiquetes();
-						int k = 0;
-						while(adquirido == false & lista != null & k < lista.size()) {
-							Tiquete base = lista.get(k);
-							if (base instanceof TiqueteVendidoNumerado) {
-								TiqueteVendidoNumerado tn = (TiqueteVendidoNumerado) base;
-								if (tn.isEstaVendido() == false) {
-									tn.setEstaVendido(true);
-									tn.setCliente(null);
-									this.tiquetes.add(tn);
-									adquirido = true;
-									break;
-								}
-							}
-							k++;
-						}
-					}
-					j++;
-				}
-				i++;
+			for (int i = 0; i < cantidadPorEvento; i++) {
+				Tiquete t = new Tiquete(
+					0.0, 0.0, UUID.randomUUID().toString(),
+					new Date(), 0, loc, loc.getPrecioBase(),
+					true, true, null // ATENCIÓN(why): organizador no es Cliente
+				);
+				this.tiquetes.add(t);
+				loc.getTiquetes().add(t);
 			}
-
-			// 2.2 Si no hubo numerado, intentar no numerado
-			if (adquirido == false) {
-				int a = 0;
-				while(adquirido == false & venues != null & a < venues.size()) {
-					Venue v = venues.get(a);
-					ArrayList<Localidad> locs = (v != null) ? v.getLocalidades() : null;
-					int b = 0;
-					while(adquirido == false & locs != null & b < locs.size()) {
-						Localidad loc = locs.get(b);
-						if (loc != null && loc.isNumerada() == false) {
-							ArrayList<Tiquete> lista = loc.getTiquetes();
-							int k = 0;
-							while(adquirido == false & lista != null & k < lista.size()) {
-								Tiquete t = lista.get(k);
-								if (t != null && !(t instanceof TiqueteVendidoNumerado) && t.isEstaVendido() == false) {
-									t.setEstaVendido(true);
-									t.setCliente(null);
-									this.tiquetes.add(t);
-									adquirido = true;
-									break;
-								}
-								k++;
-							}
-						}
-						b++;
-					}
-					a++;
-				}
-			}
-			// Si un evento no tiene disponibilidad, se omite.
 		}
 	}
-
+	
+	private Evento obtenerEventoPorNombre(String nombre_evento) {
+		if (this.mapa_eventos == null) throw new IllegalStateException("No hay eventos cargados.");
+		Evento e = this.mapa_eventos.get(nombre_evento);
+		if (e == null) throw new IllegalStateException("Evento no encontrado: " + nombre_evento);
+		return e;
+	}
+	private Localidad obtenerLocalidadPorNombre(Evento evento, String nombre_localidad) {
+		if (evento == null) throw new IllegalArgumentException("Evento nulo.");
+		if (evento.getVenues() == null) throw new IllegalStateException("El evento no tiene venues asociados.");
+		for (Venue v : evento.getVenues()) {
+			if (v == null || v.getLocalidades() == null) continue;
+			for (Localidad loc : v.getLocalidades()) {
+				if (loc != null && nombre_localidad.equals(loc.getNombre())) return loc;
+			}
+		}
+		throw new IllegalStateException("Localidad no encontrada en el evento: " + nombre_localidad);
+	}
+	private void validarCantidad(int cantidad) {
+		if (cantidad <= 0) throw new IllegalArgumentException("La cantidad debe ser > 0");
+	}
 }
 
