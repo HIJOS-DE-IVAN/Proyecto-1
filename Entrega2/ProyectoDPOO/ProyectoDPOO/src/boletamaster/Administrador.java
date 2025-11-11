@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Administrador extends Usuario{
 	
-	final static String CANCELADO = "CANCELADO";
+	public final static String CANCELADO = "CANCELADO";
 	
 	public HashMap<String, Cliente> mapa_clientes;
 	public  HashMap<String, Evento> mapa_eventos;
