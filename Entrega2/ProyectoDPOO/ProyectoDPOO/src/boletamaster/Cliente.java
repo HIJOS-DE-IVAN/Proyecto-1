@@ -274,5 +274,8 @@ public class Cliente extends Usuario{
 	public void transferir_paquete_multiple() {}
 	
 	
+	//FUNCIONES DE LA ENTREGA 2
+	
+	
 }
 
