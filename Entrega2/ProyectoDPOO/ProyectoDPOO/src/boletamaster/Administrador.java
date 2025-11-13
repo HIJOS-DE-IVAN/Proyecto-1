@@ -32,8 +32,6 @@ public class Administrador extends Usuario{
 			HashMap<String, OrganizadorDeEventos> solicitudes_promotor_marketplace) {
 		this.solicitudes_promotor_marketplace = solicitudes_promotor_marketplace;
 	}
-
-	private HashMap<String, OrganizadorDeEventos> promotor_inscritos_marketplace = new HashMap<>();
 	
 	public HashMap<String, Cliente> getClientes_inscritos_marketplace() {
 		return clientes_inscritos_marketplace;
@@ -203,6 +201,9 @@ public class Administrador extends Usuario{
 	
 	public void aceptar_promotor(String login_promotr) {
 		OrganizadorDeEventos organizador = solicitudes_promotor_marketplace.get(login_promotr);
+		promotor_inscritos_marketplace.put(login_promotr, organizador);
+		solicitudes_promotor_marketplace.remove(login_promotr);
+		
 		
 		
 	}
