@@ -125,6 +125,9 @@ public class Operacion {
 		//añadirle al comprador el tiquete comprado
 		comprador.getTiquetes().add(tiquet_ope);
 		
+		//darle el dinero al vendedor
+		parte_1.setSaldoPlataforma(parte_1.getSaldoPlataforma()+tiquet_ope.getPrecio());
+		
 	}
 	
 	public void contra_ofertar(Cliente comprador, double valor_contra_oferta) {
@@ -163,6 +166,9 @@ public class Operacion {
 		
 		//quitarle al usuario de su mapa de solicitudes 
 		parte_1.getSolicitudes_market_place().remove(nueva_operacion.getId());
+		
+		//darle el dinero al vendedor
+		parte_1.setSaldoPlataforma(parte_1.getSaldoPlataforma()+tiquet_ope.getPrecio());
 		
 	}
 	public void rechazar_contra_ofertar() {
