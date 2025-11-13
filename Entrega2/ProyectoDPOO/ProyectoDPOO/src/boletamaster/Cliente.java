@@ -10,12 +10,26 @@ public class Cliente extends Usuario{
 	
 	private double saldoPlataforma;
 	
+	public double getSaldoPlataforma() {
+		return saldoPlataforma;
+	}
 	private List<Tiquete> tiquetes;
 	
 	public Administrador admin; //cada cliente tiene contacto con el administrador
 	
 	public  HashMap<String, Evento> mapa_eventos;
 	
+	//NUEVO
+	public HashMap<Integer, Operacion> solicitudes_market_place; //ID de la solicitud, operacion
+	
+	public HashMap<Integer, Operacion> getSolicitudes_market_place() {
+		return solicitudes_market_place;
+	}
+
+	public void setSolicitudes_market_place(HashMap<Integer, Operacion> solicitudes_market_place) {
+		this.solicitudes_market_place = solicitudes_market_place;
+	}
+
 	public Cliente(String login, String password, Double saldoPlataforma) {
 		super(login,password);
 		this.saldoPlataforma = saldoPlataforma;
@@ -275,6 +289,89 @@ public class Cliente extends Usuario{
 	
 	
 	//FUNCIONES DE LA ENTREGA 2
+	//TO-DO DEBE QUEDAR EN EL MAPA DEL MARKETPLACE
+	//NO SE PUEDE DELUXE
+	
+	//En realidad la oferta ya hace que no tenga que crear una función que venda el tiquete
+	//Pues el tiquete se venderá automáticamente 
+	//PUBLICAR OFERTA
+	public void publicar_oferta_Tiquete(Tiquete tiquete_a_vender) {
+		//realizar la operacion
+		Operacion ope = new Operacion(admin,this, null, true,tiquete_a_vender );
+		ope.publicar_oferta_Tiquete();
+	}
+	//BORRAR OFERTA
+	public void borrar_oferta(int id_operacion) {
+		//Obtenemos a la operacion
+		Operacion ope = solicitudes_market_place.get(id_operacion);
+		ope.borrar_oferta();
+	}
+	
+	public void comprar_tiquete(int id_compra) {
+		Operacion operacion_encontrada = admin.buscar_operacion(id_compra);		
+		//Si encontramos la operacion y si tenemos suficnete dinero
+		if (operacion_encontrada != null && operacion_encontrada.getTiquet_ope().getPrecio() <= saldoPlataforma) {
+			operacion_encontrada.comprar_tiquete(this); //yo compro el tiquete
+		}
+	}
+	
+	//CONTRAOFERTAR
+	public void contra_ofertar(int id_compra, double valor_contra_oferta) {
+		Operacion operacion_encontrada = admin.buscar_operacion(id_compra);	
+		
+		if (operacion_encontrada != null) {
+			operacion_encontrada.contra_ofertar(this, valor_contra_oferta); //yo contraoferto
+		}
+		
+	}
+	
+	//aceptar una contra oferta
+	public void aceptar_contra_ofertar(int id_compra) {
+		
+		//buscar dentro de mi mapa de solicitudes a la operación
+		Operacion operacion_encontrada = null;
+		for (Operacion op : solicitudes_market_place.values()) {
+	        if (op.id == id_compra && op.esta_activa) {
+	            operacion_encontrada = op;
+	            break;
+	        }
+	    }
+		
+		if (operacion_encontrada != null) {
+			operacion_encontrada.aceptar_contra_oferta(); //yo acepto la contra_oferta
+		}
+		
+		
+	}
+	//rechazar una contra oferta
+public void rechazar_contra_ofertar(int id_compra) {
+		
+		//buscar dentro de mi mapa de solicitudes a la operación
+		Operacion operacion_encontrada = null;
+		for (Operacion op : solicitudes_market_place.values()) {
+	        if (op.id == id_compra && op.esta_activa) {
+	            operacion_encontrada = op;
+	            break;
+	        }
+	    }
+		
+		if (operacion_encontrada != null) {
+			operacion_encontrada.rechazar_contra_ofertar(); //yo rechazo la contra_oferta
+		}
+		
+		
+	}
+
+//inscribirse en el marketplace
+public void inscribirse_marketplace() {
+	HashMap<String, Cliente> clientes_inscritos_marketplace = admin.getClientes_inscritos_marketplace();
+	clientes_inscritos_marketplace.put(getLogin() , this);
+	 admin.setClientes_inscritos_marketplace(clientes_inscritos_marketplace);
+	
+}
+	
+
+	
 	
 	
 }

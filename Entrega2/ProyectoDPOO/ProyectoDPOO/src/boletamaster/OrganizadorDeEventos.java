@@ -3,7 +3,6 @@ package boletamaster;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
 public class OrganizadorDeEventos extends Usuario{
@@ -370,6 +369,15 @@ public class OrganizadorDeEventos extends Usuario{
 	}
 	private void validarCantidad(int cantidad) {
 		if (cantidad <= 0) throw new IllegalArgumentException("La cantidad debe ser > 0");
+	}
+	
+	
+	//NUEVO
+	//solicitud para inscribirse en el marketplace
+	public void solicitud_inscripcion_marketplace() {
+		
+		HashMap<String, OrganizadorDeEventos>  mapa = admin.getSolicitudes_promotor_marketplace();
+		mapa.put(getLogin(), this);		
 	}
 }
 

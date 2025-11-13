@@ -2,17 +2,55 @@ package boletamaster;
 
 import java.util.HashMap;
 import java.util.List;
+import java.time.LocalDateTime;
+
 
 public class Administrador extends Usuario{
 	
 	public final static String CANCELADO = "CANCELADO";
 	
 	public HashMap<String, Cliente> mapa_clientes;
-	public  HashMap<String, Evento> mapa_eventos;
+	public  HashMap<String, Evento> mapa_eventos; //nombre del evento, Evento
 	public  HashMap<String, Venue> mapa_venues;
 	public HashMap<String, String> mapa_solicitudes; //el primer string hace referencia al nombre del evento a cancelar, el segundo hace referencia a la descripción de la solicitud
 	public HashMap<String, Venue> mapa_venues_sugeridos; //nombre, venue
 	
+	private HashMap<LocalDateTime, Operacion> log_registros = new HashMap<>(); //para que nadie pueda borrarlo debe ser private
+
+	private HashMap<String, Cliente> clientes_inscritos_marketplace = new HashMap<>(); //llave: nombre, valor, cliente
+	
+	private HashMap<String,OrganizadorDeEventos> solicitudes_promotor_marketplace = new HashMap<>();
+	
+	private HashMap<String,OrganizadorDeEventos> promotor_inscritos_marketplace = new HashMap<>();
+
+	
+	public HashMap<String, OrganizadorDeEventos> getSolicitudes_promotor_marketplace() {
+		return solicitudes_promotor_marketplace;
+	}
+
+	public void setSolicitudes_promotor_marketplace(
+			HashMap<String, OrganizadorDeEventos> solicitudes_promotor_marketplace) {
+		this.solicitudes_promotor_marketplace = solicitudes_promotor_marketplace;
+	}
+
+	private HashMap<String, OrganizadorDeEventos> promotor_inscritos_marketplace = new HashMap<>();
+	
+	public HashMap<String, Cliente> getClientes_inscritos_marketplace() {
+		return clientes_inscritos_marketplace;
+	}
+
+	public void setClientes_inscritos_marketplace(HashMap<String, Cliente> clientes_inscritos_marketplace) {
+		this.clientes_inscritos_marketplace = clientes_inscritos_marketplace;
+	}
+
+	public HashMap<String, OrganizadorDeEventos> getPromotor_inscritos_marketplace() {
+		return promotor_inscritos_marketplace;
+	}
+
+	public void setPromotor_inscritos_marketplace(HashMap<String, OrganizadorDeEventos> promotor_inscritos_marketplace) {
+		this.promotor_inscritos_marketplace = promotor_inscritos_marketplace;
+	}
+
 	public Administrador(String login, String password) {
 		super(login,password);
 	}
@@ -28,6 +66,15 @@ public class Administrador extends Usuario{
 	public HashMap<String, String> getMapa_solicitudes() {
 		return mapa_solicitudes;
 	}
+	//NUEVO ------
+	public HashMap<LocalDateTime, Operacion> getLog_registros() {
+		return log_registros;
+	}
+	public void setLog_registros(HashMap<LocalDateTime, Operacion> log_registros) {
+		this.log_registros = log_registros;
+	}
+	
+	//NUEVO ----
 
 	public void setMapa_eventos(HashMap<String, Evento> mapa_eventos) {
 		this.mapa_eventos = mapa_eventos;
@@ -121,6 +168,43 @@ public class Administrador extends Usuario{
 	
 	public void consultar_estado_finaniero() {
 		//¿Consultar el estado financiero de todos los eventos que dirige?
+	}
+	
+	
+	//NUEVOOOOOOOOO 
+	
+	//Se cumple el hecho que solo el administrador puede leer el log
+	public Operacion buscar_operacion(int id_ope) {
+		Operacion operacion_encontrada = null;
+		for (Operacion op : log_registros.values()) {
+	        if (op.id == id_ope && op.esta_activa) {
+	            operacion_encontrada = op;
+	            break;
+	        }
+	    }
+		return operacion_encontrada;
+	}
+	
+	public void eliminar_operacion(int id_ope) {
+		Operacion operacion_encontrada = buscar_operacion(id_ope);
+		if (operacion_encontrada != null) {
+			//es necesario eliminar esta operacion del mapa
+			log_registros.remove(operacion_encontrada.getFechaHora());
+			operacion_encontrada.borrar_oferta();
+			//modificamos la operación en el mapa para que quede registro que eliminamos esta operación
+			//para esto, la parte_1 y la parte_2 serán NUll, el resto no cambia
+			operacion_encontrada.setParte_1(null);
+			operacion_encontrada.setParte_2(null);
+			
+			//la añadimos de nuevo al log
+			getLog_registros().put(operacion_encontrada.getFechaHora(), operacion_encontrada);
+		}
+	}
+	
+	public void aceptar_promotor(String login_promotr) {
+		OrganizadorDeEventos organizador = solicitudes_promotor_marketplace.get(login_promotr);
+		
+		
 	}
 	
 	
