@@ -17,6 +17,13 @@ public class Cliente extends Usuario{
 	
 	public Administrador admin; //cada cliente tiene contacto con el administrador
 	
+	public Administrador getAdmin() {
+		return admin;
+	}
+
+	public void setAdmin(Administrador admin) {
+		this.admin = admin;
+	}
 	public  HashMap<String, Evento> mapa_eventos;
 	
 	//NUEVO
